@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Система ANPR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .panel {
+            background: #444;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #video-stream {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #555;
+        }
+
+        #history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            color: #ddd;
+        }
+
+        #history-table th,
+        #history-table td {
+            padding: 5px;
+            border: 1px solid #555;
+            text-align: center;
+        }
+
+        #latest-plate,
+        #cropped-plate {
+            width: 100%;
+            height: auto;
+            border: 1px solid #555;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Система ANPR</h1>
+    <div class="container">
+        <!-- Левая панель -->
+        <div class="panel">
+            <h2>Последняя распознанная машина</h2>
+            <img id="latest-plate" src="" alt="Последняя распознанная машина" />
+            <h3>Распознанный номер</h3>
+            <div id="recognized-plate">---</div>
+        </div>
+
+        <!-- Правая панель с видео и таблицей -->
+        <div class="panel">
+            <h2>Видео в реальном времени</h2>
+            <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Видео поток" />
+
+            <h3>История распознанных номеров</h3>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>Индекс</th>
+                        <th>Номер</th>
+                        <th>Время</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <!-- Данные будут добавляться здесь динамически -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        var socket = io.connect(
+            location.protocol + "//" + document.domain + ":" + location.port
+        );
+
+        socket.on("plate_data", function (data) {
+            // Обновление последнего распознанного номера
+            document.getElementById("recognized-plate").innerText = data.plate;
+
+            // Добавление записи в таблицу истории
+            const tableBody = document.getElementById("history-body");
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${data.index}</td><td>${data.plate
+                }</td><td>${new Date().toLocaleTimeString()}</td>`;
+            tableBody.prepend(row);
+        });
+    </script>
+</body>
+
+</html>
